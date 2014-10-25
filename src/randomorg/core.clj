@@ -2,12 +2,10 @@
   (:require [clojure.data.json :as json]
             [clj-http.client :as http]))
 
-
 (def API_ENDPOINT "https://api.random.org/json-rpc/1/invoke")
 
 ;; TODO remove
 (def API_KEY "3ede1e75-e3d9-4298-89a3-2ef49e5f1143")
-
 
 (defn- make-request []
   {:jsonrpc "2.0"
@@ -15,13 +13,46 @@
    :params nil
    :id nil})
 
-(defn post-json [json]
+(defn- post-json [json]
   (http/post API_ENDPOINT
              {:content-type :json
               :body json}))
 
+(defn- make-success [data]
+  {:status :success
+   :data data})
+
+(defn- make-error [message]
+  {:status :error
+   :data message})
+
+(defn- request-processor [method data]
+  (-> (make-request)
+      (assoc :method method)
+      (assoc :params data)
+      (assoc-in [:params :apiKey] API_KEY)
+      (assoc :id 0) ;; simple stub as we don't really care about it
+      (json/write-str :key-fn name)
+      (post-json)
+      ((fn [json-result]
+         (case (:status json-result)
+           200 (-> (:body json-result)
+                   (json/read-str :key-fn keyword)
+                   (get-in [:result :random :data])
+                   make-success)
+           
+           500 (-> (:body json-result)
+                   (json/read-str :key-fn keyword)
+                   (get-in [:error :message])
+                   make-error)
+           
+           ;; not handled
+           (throw (IllegalArgumentException.
+                   (format "Not handled status %s" (:status json-result))))
+           )))))
+
 (defn generate-integers
-  "Generates true random integers within user-defined range.\n
+  "Generates true random integers within user-defined range.
 
    Required Parameters:
    n - number of integers, [1, 1e4]
@@ -33,24 +64,8 @@
    base - base for numbers, default is 10
 "
   [& {:keys [n min max replacement base]
-      :as request-data
-      :or {replacement true base 10}}]
-  ;; TODO validate
-  (-> (make-request)
-      (assoc :method "generateIntegers")
-      (assoc :params request-data)
-      (assoc-in [:params :apiKey] API_KEY)
-      (assoc :id 0) ;; simple stub as we don't really care about it
-      (json/write-str :key-fn name)
-      (post-json)
-      (as-> json-result
-            (cond-> json-result
-                    ;; succesful request
-                    (= 200 (:status json-result))
-                    (-> (:body json-result)
-                        (json/read-str :key-fn keyword)
-                        (get-in [:result :random :data]))
-                    
-                    (= 500 (:status json-result))
-                    :error
-                    ))))
+      :or {replacement true base 10}
+      :as request-data}]
+  ;; TODO validation
+  (request-processor "generateIntegers"
+                     (select-keys request-data [:n :min :max :replacement :base])))

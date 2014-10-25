@@ -1,6 +1,7 @@
 (ns randomorg.core
   (:require [clojure.data.json :as json]
-            [clj-http.client :as http]))
+            [clj-http.client :as http]
+            [randomorg.validator :as vv]))
 
 (def API_ENDPOINT "https://api.random.org/json-rpc/1/invoke")
 
@@ -35,6 +36,7 @@
       (json/write-str :key-fn name)
       (post-json)
       ((fn [json-result]
+         (print json-result)
          (case (:status json-result)
            200 (-> (:body json-result)
                    (json/read-str :key-fn keyword)
@@ -64,8 +66,13 @@
    base - base for numbers, default is 10
 "
   [& {:keys [n min max replacement base]
-      :or {replacement true base 10}
       :as request-data}]
-  ;; TODO validation
-  (request-processor "generateIntegers"
-                     (select-keys request-data [:n :min :max :replacement :base])))
+  (let [request-data (merge request-data {:replacement true :base 10})]
+    (validate request-data
+              :n vv/n-validator
+              :min vv/range-validator
+              :max vv/range-validator
+              :replacement vv/boolean
+              :base vv/base-validator)
+    (request-processor "generateIntegers"
+                       (select-keys request-data [:n :min :max :replacement :base]))))

@@ -29,23 +29,28 @@
    max - upper boundary for the range, [-1e9, 1e9]
 
    Optional Parameters:
-   replacement -
-   base -
+   replacement - true may return duplicates, false return all unique numbers, default is true
+   base - base for numbers, default is 10
 "
-  [n min max]
+  [& {:keys [n min max replacement base]
+      :as request-data
+      :or {replacement true base 10}}]
   ;; TODO validate
   (-> (make-request)
       (assoc :method "generateIntegers")
-      (assoc :params {:n n
-                      :min min
-                      :max max
-                      :apiKey API_KEY})
+      (assoc :params request-data)
+      (assoc-in [:params :apiKey] API_KEY)
       (assoc :id 0) ;; simple stub as we don't really care about it
       (json/write-str :key-fn name)
       (post-json)
-      :body
-      (json/read-str :key-fn keyword)
-      :result
-      :random
-      :data
-      ))
+      (as-> json-result
+            (cond-> json-result
+                    ;; succesful request
+                    (= 200 (:status json-result))
+                    (-> (:body json-result)
+                        (json/read-str :key-fn keyword)
+                        (get-in [:result :random :data]))
+                    
+                    (= 500 (:status json-result))
+                    :error
+                    ))))

@@ -28,5 +28,8 @@
   (<= from value to))
 
 (def n-validator [v/required integer [ranged [1 1e4]]])
-(def range-validator [v/required integer [ranged [-1e9 1e9]]])
+(def range-1e9-validator [v/required integer [ranged [-1e9 1e9]]])
+(def range-1e6-validator [v/required integer [ranged [-1e6 1e6]]])
+(def decimal-range-validator [v/required integer [ranged [1 20]]])
+(def significant-digits-validator [v/required integer [ranged [2 20]]])
 (def base-validator [[v/member #{2 8 10 16} :message "base must be 2, 8, 10 or 16"]])

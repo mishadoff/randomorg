@@ -38,6 +38,7 @@
   (<= from (count value) to))
 
 (def n-validator [v/required integer [ranged [1 1e4]]])
+(def n-uuid-validator [v/required integer [ranged [1 1e3]]])
 (def range-1e9-validator [v/required integer [ranged [-1e9 1e9]]])
 (def range-1e6-validator [v/required integer [ranged [-1e6 1e6]]])
 (def decimal-range-validator [v/required integer [ranged [1 20]]])

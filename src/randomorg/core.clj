@@ -146,3 +146,20 @@
               :replacement v/boolean)
     
     (request-processor "generateStrings" request-data)))
+
+(defn generate-uuids
+  "Generates random uuids
+
+   Required Parameters:
+   n - number of uuids, [1, 1e3]
+
+   Optional Parameters:
+   None
+"
+  [& {:keys [n]
+      :as raw-request-data}]
+  (let [request-data (select-keys raw-request-data [:n])]
+    (v/validate request-data
+                :n v/n-uuid-validator)
+    
+    (request-processor "generateUUIDs" request-data)))

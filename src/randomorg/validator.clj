@@ -37,6 +37,11 @@
   [value [from to]]
   (<= from (count value) to))
 
+(v/defvalidator byte
+  {:default-message-format "%s must be divisible by 8"}
+  [value]
+  (zero? (mod value 8)))
+
 (def n-validator [v/required integer [ranged [1 1e4]]])
 (def n-uuid-validator [v/required integer [ranged [1 1e3]]])
 (def range-1e9-validator [v/required integer [ranged [-1e9 1e9]]])
@@ -46,3 +51,6 @@
 (def significant-digits-validator [v/required integer [ranged [2 20]]])
 (def base-validator [[v/member #{2 8 10 16} :message "base must be 2, 8, 10 or 16"]])
 (def characters-validator [v/required string [string-ranged [1 20]]])
+(def n-blob-validator [v/required integer [ranged [1 100]]])
+(def blob-size-validator [v/required integer byte [ranged [1 1048576]] ])
+(def blob-format-validator [[v/member #{"base64" "hex"} :message "format must be base64 or hex"]])

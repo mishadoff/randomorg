@@ -19,13 +19,17 @@
              {:content-type :json
               :body json}))
 
-(defn- make-success [data]
+(defn- make-success [data usage]
   {:status :success
-   :data data})
+   :data data
+   :usage usage})
 
 (defn- make-error [message]
   {:status :error
    :data message})
+
+(defn api-usage-processor [json-response]
+  (select-keys json-response [:bitsLeft :requestsLeft :totalBits :totalRequests]))
 
 (defn- request-processor [method data]
   (-> (make-request)
@@ -35,23 +39,23 @@
       (assoc :id 0) ;; simple stub as we don't really care about it
       (json/write-str :key-fn name)
       (post-json)
-      ((fn [json-result]
-         (print json-result)
-         (case (:status json-result)
-           ;; Bug: 200 could return error
-           200 (-> (:body json-result)
-                   (json/read-str :key-fn keyword)
-                   (get-in [:result :random :data])
-                   make-success)
-           
-           500 (-> (:body json-result)
-                   (json/read-str :key-fn keyword)
-                   (get-in [:error :message])
-                   make-error)
+      ((fn [response]
+         (print response) ;; TODO remove
+         (case (:status response)
+           200 (let [json (-> (:body response)
+                              (json/read-str :key-fn keyword))
+                     result (:result json)
+                     data (get-in result [:random :data])
+                     usage (api-usage-processor result)
+                     error (get-in json [:error :message])
+                     ]
+                 (cond
+                  result (make-success data usage)
+                  error (make-error error)
+                  :else (make-error nil usage)))
            
            ;; not handled
-           (throw (IllegalArgumentException.
-                   (format "Not handled status %s" (:status json-result))))
+           (make-error (:status response))
            )))))
 
 (defn generate-integers
@@ -163,3 +167,30 @@
                 :n v/n-uuid-validator)
     
     (request-processor "generateUUIDs" request-data)))
+
+(defn generate-blobs
+  "Generates random blobs
+
+   Required Parameters:
+   n - number of random blobs, [1, 100]
+   size - the size of each blob measured in bits, must be in [1, 1048576] and divisible by 8
+
+   Optional Parameters:
+   format - specifies the format in which blob will be returned, allowed values [base64, hex], default is base64
+"
+  [& {:keys [n size format]
+      :as raw-request-data}]
+  (let [request-data (-> (merge {:format "base64"}
+                                (select-keys raw-request-data [:n :size :format])))]
+    (v/validate request-data
+                :n v/n-blob-validator
+                :size v/blob-size-validator
+                :format v/blob-format-validator)
+    
+    (request-processor "generateBlobs" request-data)))
+
+
+(defn get-usage
+  "Get API usage limits"
+  []
+  (request-processor "getUsage" {}))

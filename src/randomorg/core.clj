@@ -5,8 +5,10 @@
 
 (def API_ENDPOINT "https://api.random.org/json-rpc/1/invoke")
 
-;; TODO remove
-(def API_KEY "3ede1e75-e3d9-4298-89a3-2ef49e5f1143")
+;; some api key for testing/playground purposes
+;; request your own api key 
+(def ^:dynamic *API_KEY*
+  "3ede1e75-e3d9-4298-89a3-2ef49e5f1143")
 
 (defn- make-request []
   {:jsonrpc "2.0"
@@ -35,7 +37,7 @@
   (-> (make-request)
       (assoc :method method)
       (assoc :params data)
-      (assoc-in [:params :apiKey] API_KEY)
+      (assoc-in [:params :apiKey] *API_KEY*)
       (assoc :id 0) ;; simple stub as we don't really care about it
       (json/write-str :key-fn name)
       (post-json)
@@ -47,8 +49,7 @@
                      result (:result json)
                      data (get-in result [:random :data])
                      usage (api-usage-processor result)
-                     error (get-in json [:error :message])
-                     ]
+                     error (get-in json [:error :message])]
                  (cond
                   result (make-success data usage)
                   error (make-error error)

@@ -1,14 +1,16 @@
 # randomorg
 
-A Clojure library designed to ... well, that part is up to you.
+Random generator via atmospheric noise Random.org
 
-## Usage
+## Example usage
 
-FIXME
+``` clojure
+(binding [*API_KEY* "your-api-key"]
+  (generate-integers :n 10 :min 0 :max 99))
+```
 
 ## License
 
 Copyright © 2014 FIXME
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.

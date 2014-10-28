@@ -54,3 +54,7 @@
 (def n-blob-validator [v/required integer [ranged [1 100]]])
 (def blob-size-validator [v/required integer byte [ranged [1 1048576]] ])
 (def blob-format-validator [[v/member #{"base64" "hex"} :message "format must be base64 or hex"]])
+;; todo required random
+(def required-random [v/required])
+;; todo validate signature
+(def required-signature [v/required string])

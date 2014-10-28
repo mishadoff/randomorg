@@ -17,14 +17,17 @@
    :id nil})
 
 (defn- post-json [json]
+  (println json)
   (http/post API_ENDPOINT
              {:content-type :json
               :body json}))
 
-(defn- make-success [data usage]
-  {:status :success
-   :data data
-   :usage usage})
+(defn- make-success [data & {:keys [usage]}]
+  (let [succ {:status :success
+              :data data}]
+    (if usage
+      (assoc succ :usage usage)
+      succ)))
 
 (defn- make-error [message]
   {:status :error
@@ -34,17 +37,22 @@
   (select-keys json-response [:bitsLeft :requestsLeft :totalBits :totalRequests]))
 
 (defn signed-data-processor [json-response]
-  {:hashed-api-key
-   (get-in json-response [:result :random :hashedApiKey])
-   :signature
-   (get-in json-response [:result :signature])})
+  {:signature
+   (get-in json-response [:result :signature])
+   :random
+   (get-in json-response [:result :random])})
 
-(defn- request-processor [method data]
+(defn- request-processor
+  [method data
+   & {:keys [api-key] :or {api-key true}}]
   (let [signed (get data :signed false)]
     (-> (make-request)
         (assoc :method method)
         (assoc :params (dissoc data :signed))
-        (assoc-in [:params :apiKey] *API_KEY*)
+        ((fn [req]
+           (if api-key
+             (assoc-in req [:params :apiKey] *API_KEY*)
+             req)))
         (assoc :id 0) ;; simple stub as we don't really care about it
         (json/write-str :key-fn name)
         (post-json)
@@ -57,9 +65,11 @@
                        data (get-in result [:random :data])
                        usage (api-usage-processor result)
                        error (get-in json [:error :message])
-                       signed-data (signed-data-processor json)]
+                       signed-data (signed-data-processor json)
+                       verify (:authenticity result)]
                    (cond
-                    result (-> (make-success data usage)
+                    verify (make-success verify)
+                    result (-> (make-success data :usage usage)
                                ((fn [success]
                                   (if signed
                                     (assoc success :signed signed-data)
@@ -227,3 +237,12 @@
   "Get API usage limits"
   []
   (request-processor "getUsage" {}))
+
+
+(defn verify-signature
+  [{:keys [random signature]
+    :as signed}]
+  (v/validate signed
+              :random v/required-random
+              :signature v/required-signature)
+  (request-processor "verifySignature" (select-keys signed [:random :signature]) :api-key false))

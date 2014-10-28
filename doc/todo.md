@@ -1,8 +1,8 @@
 # TODO
 
+- Signed random API
 - Review style
 - Contribute validators to bouncer
-- Signed random API
 - Rename keys optionally?
 - Investigate meta for api usage
 - Tests
@@ -12,4 +12,5 @@
   - Example Usage
   - List of all methods
 - Continuous Integeration
-
+- Publish to clojars
+- Announce

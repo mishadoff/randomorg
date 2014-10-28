@@ -10,6 +10,11 @@
 (def ^:dynamic *API_KEY*
   "3ede1e75-e3d9-4298-89a3-2ef49e5f1143")
 
+;; character sets for generate-string
+(def lowercase "abcdefghijklmnopqrstuvwxyz")
+(def uppercase "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+(def digits "0123456789")
+
 (defn- make-request []
   {:jsonrpc "2.0"
    :method nil
@@ -17,7 +22,6 @@
    :id nil})
 
 (defn- post-json [json]
-  (println json)
   (http/post API_ENDPOINT
              {:content-type :json
               :body json}))
@@ -25,9 +29,7 @@
 (defn- make-success [data & {:keys [usage]}]
   (let [succ {:status :success
               :data data}]
-    (if usage
-      (assoc succ :usage usage)
-      succ)))
+    (if usage (assoc succ :usage usage) succ)))
 
 (defn- make-error [message]
   {:status :error
@@ -37,12 +39,22 @@
   (select-keys json-response [:bitsLeft :requestsLeft :totalBits :totalRequests]))
 
 (defn signed-data-processor [json-response]
-  {:signature
-   (get-in json-response [:result :signature])
-   :random
-   (get-in json-response [:result :random])})
+  {:signature (get-in json-response [:result :signature])
+   :random (get-in json-response [:result :random])})
 
 (defn- request-processor
+  "Common method for processing request
+
+   Required:
+   name - remote API method,
+   data - map with request parameters, will be encoded to json
+
+   :signed property in data is not posted in request body, but used for getting signed structure of random
+
+
+   Optional:
+   :api-key boolean - some request don't need api-key, default is true
+"
   [method data
    & {:keys [api-key] :or {api-key true}}]
   (let [signed (get data :signed false)]
@@ -57,7 +69,6 @@
         (json/write-str :key-fn name)
         (post-json)
         ((fn [response]
-           (print response) ;; TODO remove
            (case (:status response)
              200 (let [json (-> (:body response)
                                 (json/read-str :key-fn keyword))
@@ -218,6 +229,7 @@
 
    Optional Parameters:
    format - specifies the format in which blob will be returned, allowed values [base64, hex], default is base64
+   signed - methods produce digitally signed series of true random values can be proved to originate from RANDOM.ORG
 "
   [& {:keys [n size format signed]
       :as raw-request-data}]
@@ -240,8 +252,8 @@
 
 
 (defn verify-signature
-  [{:keys [random signature]
-    :as signed}]
+  "Check that random data realy comes from RANDOM.ORG"
+  [{:keys [random signature] :as signed}]
   (v/validate signed
               :random v/required-random
               :signature v/required-signature)

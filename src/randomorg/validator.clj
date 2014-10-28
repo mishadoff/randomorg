@@ -50,7 +50,7 @@
 (def string-length-validator [v/required integer [ranged [1 20]]])
 (def significant-digits-validator [v/required integer [ranged [2 20]]])
 (def base-validator [[v/member #{2 8 10 16} :message "base must be 2, 8, 10 or 16"]])
-(def characters-validator [v/required string [string-ranged [1 20]]])
+(def characters-validator [v/required string [string-ranged [1 80]]])
 (def n-blob-validator [v/required integer [ranged [1 100]]])
 (def blob-size-validator [v/required integer byte [ranged [1 1048576]] ])
 (def blob-format-validator [[v/member #{"base64" "hex"} :message "format must be base64 or hex"]])

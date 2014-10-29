@@ -71,8 +71,6 @@
       (doseq [base [1 3 5 7]]
         (fact (g :n 1 :min 0 :max 1 :base base) => error)))))
 
-
-
 (fact "signed requests"
   (generate-integers :n 1 :min 0 :max 1 :signed true) => signed
   (generate-integers :n 1 :min 0 :max 1) =not=> signed)

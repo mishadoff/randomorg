@@ -1,4 +1,4 @@
-# randomorg
+# randomorg ![Build Status](https://api.travis-ci.org/mishadoff/randomorg.png)
 
 Random generator via atmospheric noise random.org
 

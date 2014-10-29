@@ -3,7 +3,7 @@
 Random generator via atmospheric noise random.org
 
 TODO
-```
+``` clojure
 [randomorg "0.1.0"]
 ```
 
@@ -38,7 +38,8 @@ Are your random numbers really random?
 (generate-blobs :n 1 :size (* 8 1024) :format "hex")
 ```
 
-All request are made with default API key, and not production ready. Request your own API key.
+All request are made with default API key, which is shared.
+Request your own API key for production purposes.
 
 ``` clojure
 (binding [*API_KEY* "your-api-key"]
@@ -50,11 +51,11 @@ All request are made with default API key, and not production ready. Request you
 Random.org provides signed version of its API.
 Just add an optional parameter `:signed true`
 
-```
+``` clojure
 (generate-uuids :n 1 :signed true)
 ```
 
-Response map contain additional object `:signed`
+Response map contains additional object `:signed`
 
 ``` clojure
 {:signed {:random { <random data> }

@@ -1,5 +1,6 @@
 (ns randomorg.core
   (:require [clojure.data.json :as json]
+            [clojure.set :as set]
             [clj-http.client :as http]
             [randomorg.validator :as v]))
 
@@ -36,7 +37,12 @@
    :data message})
 
 (defn api-usage-processor [json-response]
-  (select-keys json-response [:bitsLeft :requestsLeft :totalBits :totalRequests]))
+  (-> json-response
+      (select-keys [:bitsLeft :requestsLeft :totalBits :totalRequests])
+      (set/rename-keys {:bitsLeft :bits-left
+                        :requestsLeft :requests-left
+                        :totalBits :total-bits
+                        :totalRequests :total-requests})))
 
 (defn signed-data-processor [json-response]
   {:signature (get-in json-response [:result :signature])
@@ -125,7 +131,7 @@
 
    Required Parameters:
    n - number of decimals, [1, 1e4]
-   decimalPlaces - number of decimal places, [1, 20]
+   digits - number of decimal places, [1, 20]
 
    Optional Parameters:
    replacement - true may return duplicates, false return all unique numbers, default is true
@@ -134,7 +140,8 @@
   [& {:keys [n decimalPlaces replacement signed]
       :as raw-request-data}]
   (let [request-data (-> (merge {:replacement true :signed false} raw-request-data)
-                         (select-keys [:n :decimalPlaces :replacement :signed]))]
+                         (select-keys [:n :digits :replacement :signed])
+                         (set/rename-keys {:digits :decimalPlaces}))]
     (v/validate request-data
                 :n v/n-validator
                 :decimalPlaces v/decimal-range-validator
@@ -152,23 +159,25 @@
    Required Parameters:
    n - number of decimals, [1, 1e4]
    mean - mean of distribution, [-1e6, 1e6]
-   standardDeviation - standard deviation, [-1e6, 1e6]
-   significantDigits - significant digits, [2, 20]
+   std - standard deviation, [-1e6, 1e6]
+   digits - significant digits, [2, 20]
 
    Optional Parameters:
    signed - methods produce digitally signed series of true random values can be proved to originate from RANDOM.ORG
 
 "
-  [& {:keys [n mean standardDeviation significantDigits signed]
+  [& {:keys [n mean std digits signed]
       :as raw-request-data}]
   (let [request-data (-> (merge {:signed false} raw-request-data)
-                         (select-keys [:n :mean :standardDeviation :significantDigits :signed]))]
+                         (select-keys [:n :mean :std :digits :signed])
+                         (set/rename-keys {:std :standardDeviation
+                                           :digits :significantDigits}))]
     (v/validate request-data
-              :n v/n-validator
-              :mean v/range-1e6-validator
-              :standardDeviation v/range-1e6-validator
-              :significantDigits v/significant-digits-validator
-              :signed v/boolean)
+                :n v/n-validator
+                :mean v/range-1e6-validator
+                :standardDeviation v/range-1e6-validator
+                :significantDigits v/significant-digits-validator
+                :signed v/boolean)
     (request-processor
      (if signed "generateSignedGaussians" "generateGaussians")
      request-data)))
@@ -190,11 +199,11 @@
   (let [request-data (-> (merge {:replacement true :signed false} raw-request-data)
                          (select-keys [:n :length :characters :replacement :signed]))]
     (v/validate request-data
-              :n v/n-validator
-              :length v/string-length-validator
-              :characters v/characters-validator
-              :replacement v/boolean
-              :signed v/boolean)
+                :n v/n-validator
+                :length v/string-length-validator
+                :characters v/characters-validator
+                :replacement v/boolean
+                :signed v/boolean)
     
     (request-processor
      (if signed "generateSignedStrings" "generateStrings")
@@ -235,7 +244,7 @@
       :as raw-request-data}]
   (let [request-data (-> (merge {:format "base64" :signed false} raw-request-data)
                          (select-keys [:n :size :format :signed]))]
-  (v/validate request-data
+    (v/validate request-data
                 :n v/n-blob-validator
                 :size v/blob-size-validator
                 :format v/blob-format-validator

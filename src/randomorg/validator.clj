@@ -28,7 +28,7 @@
   (string? value))
 
 (v/defvalidator ranged
-  {:default-message-format "%s must be in specified range"}
+  {:default-message-format "%s must be in a specified range"}
   [value [from to]]
   (<= from value to))
 

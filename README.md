@@ -9,10 +9,10 @@ TODO
 
 ## Rationale
 
-TODO
 Are your random numbers really random? 
 
--- links
+- [Statistical Analysis](http://www.random.org/analysis/)
+- [Predicting the next Math.random() in Java](http://franklinta.com/2014/08/31/predicting-the-next-math-random-in-java/)
 
 ## Examples
 
@@ -93,7 +93,6 @@ It includes total usage of API_KEY as well.
  :total-bits      26347262
  :total-requests  237}
 ```
-
 
 ## Validation
 

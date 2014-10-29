@@ -34,9 +34,9 @@
 
 (defn- make-error [message]
   {:status :error
-   :data message})
+   :message message})
 
-(defn api-usage-processor [json-response]
+(defn- api-usage-processor [json-response]
   (-> json-response
       (select-keys [:bitsLeft :requestsLeft :totalBits :totalRequests])
       (set/rename-keys {:bitsLeft :bits-left
@@ -44,7 +44,7 @@
                         :totalBits :total-bits
                         :totalRequests :total-requests})))
 
-(defn signed-data-processor [json-response]
+(defn- signed-data-processor [json-response]
   {:signature (get-in json-response [:result :signature])
    :random (get-in json-response [:result :random])})
 
@@ -98,7 +98,7 @@
              (make-error (:status response))
              ))))))
 
-(defn- generate-integers
+(defn generate-integers
   "Generates true random integers within user-defined range.
 
    Required Parameters:
@@ -114,17 +114,20 @@
   [& {:keys [n min max replacement base signed]
       :as raw-request-data}]
   (let [request-data (-> (merge {:replacement true :base 10 :signed false} raw-request-data)
-                         (select-keys [:n :min :max :replacement :base :signed]))]
-    (v/validate request-data
-                :n v/n-validator
-                :min v/range-1e9-validator
-                :max v/range-1e9-validator
-                :replacement v/boolean
-                :base v/base-validator
-                :signed v/boolean)
-    (request-processor
-     (if signed "generateSignedIntegers" "generateIntegers")
-     request-data)))
+                         (select-keys [:n :min :max :replacement :base :signed]))
+        errors-map (v/validate request-data
+                               :n v/n-validator
+                               :min v/range-1e9-validator
+                               :max v/range-1e9-validator
+                               :replacement v/boolean
+                               :base v/base-validator
+                               :signed v/boolean)]
+    (cond
+     (empty? errors-map)
+     (request-processor
+      (if signed "generateSignedIntegers" "generateIntegers")
+      request-data)
+     :else (make-error errors-map))))
 
 (defn generate-decimal-fractions
   "Generates decimal fractions from a uniform distribution across the [0, 1] interval

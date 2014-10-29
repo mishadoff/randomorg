@@ -23,10 +23,10 @@ Are your random numbers really random?
 (generate-integers :n 52 :min 1 :max 52 :replacement false)
 
 ;; uniform distribution of 10 numbers in [0, 1]
-(generate-decimal-fractions :n 10 :decimalPlaces 2)
+(generate-decimal-fractions :n 10 :digits 2)
 
 ;; normal distribution
-(generate-gaussians :n 10 :mean 0 :standardDeviation 10 :significantDigits 2)
+(generate-gaussians :n 10 :mean 0 :std 10 :digits 2)
 
 ;; new password alphanumeric 12 chars
 (generate-strings :n 1 :length 12 :characters (str lowercase uppercase digits))

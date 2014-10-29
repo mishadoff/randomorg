@@ -1,16 +1,14 @@
 (ns randomorg.validator
+  (:refer-clojure :exclude [byte boolean])
   (:require [bouncer.core :as bouncer]
             [bouncer.validators :as v]))
 
 (defn validate
   "Helper function build on top of bouncer validate.
-   Throws exception when validation fails"
+   Return processed errors"
   [& args]
-  (let [validate-map (apply bouncer/validate args)]
-    (if-not (empty? (first validate-map))
-      (throw (IllegalArgumentException. (str "Errors present: " validate-map))))
-    ))
-
+  (first (apply bouncer/validate args)))
+  
 (v/defvalidator integer
   {:default-message-format "%s must be an integer"}
   [num]

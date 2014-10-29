@@ -9,6 +9,7 @@ TODO
 
 ## Rationale
 
+TODO
 Are your random numbers really random? 
 
 -- links
@@ -74,7 +75,8 @@ Using this object you can validate that results are really random and comes from
 Every succesful response return `:usage` object as well
 
 ``` clojure
-{:requestsLeft 4978, :bitsLeft 482078}
+{:requests-left 4978
+ :bits-left     482078}
 ```
 
 Besides, you can request quota without data
@@ -83,13 +85,32 @@ Besides, you can request quota without data
 (get-usage)
 ```
 
+It includes total usage of API_KEY as well.
+
+``` clojure
+{:requests-left   4978
+ :bits-left       482078
+ :total-bits      26347262
+ :total-requests  237}
+```
+
+
 ## Validation
 
-To avoid wasteful calls with invalid params to server, we utilize usage of [bouncer](https://github.com/leonardoborges/bouncer) validation library. It contains plenty checks if all required parameters specified, values in a allowed range, etc.
+To avoid wasteful calls with invalid params to server, we use [bouncer](https://github.com/leonardoborges/bouncer) validation library. It contains plenty checks if all required parameters specified, values in a allowed range, etc.
 
-If validation error occurs `IllegalArgumentException` is thrown
+If validation error occurs, error object returned
 
-TODO (use error object)
+``` clojure
+{:status :error :message "n must be provided"}
+```
+
+## Tests
+
+Currently all tests are *dumb* - they validate that request is actually sent to random.org and response is returned.
+There are no validation of content obtained from random.org.
+
+`lein midje`
 
 ## License
 

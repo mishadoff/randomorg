@@ -9,6 +9,7 @@
 ;; and not validate these results as they come from random.org
 
 (defn error [result]
+  "misplaced docstring"
   (and (= (:status result) :error)
        (not (empty? (:message result)))))
 

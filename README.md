@@ -107,7 +107,7 @@ If validation error occurs, error object returned
 ## Tests
 
 Currently all tests are *dumb* - they validate that request is actually sent to random.org and response is returned.
-There are no validation of content obtained from random.org.
+There are no validation of content obtained from random.org. Tests are powered by [midje](https://github.com/marick/Midje)
 
 `lein midje`
 

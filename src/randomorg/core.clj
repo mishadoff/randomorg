@@ -92,7 +92,7 @@
                                     (assoc success :signed signed-data)
                                     success))))
                     error (make-error error)
-                    :else (make-error nil usage)))
+                    :else (make-error nil)))
              
              ;; not handled
              (make-error (:status response))

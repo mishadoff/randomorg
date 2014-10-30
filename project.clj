@@ -8,4 +8,5 @@
                  [clj-http "1.0.0"]
                  [bouncer "0.3.1"]]
   :profiles {:dev {:dependencies [[midje "1.6.3"]]
-                   :plugins [[lein-midje "3.0.0"]]}})
+                   :plugins [[lein-midje "3.0.0"]
+                             [jonase/eastwood "0.1.4"]]}})

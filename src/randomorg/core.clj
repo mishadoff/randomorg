@@ -140,21 +140,25 @@
    replacement - true may return duplicates, false return all unique numbers, default is true
    signed - methods produce digitally signed series of true random values can be proved to originate from RANDOM.ORG
 "
-  [& {:keys [n decimalPlaces replacement signed]
+  [& {:keys [n digits replacement signed]
       :as raw-request-data}]
   (let [request-data (-> (merge {:replacement true :signed false} raw-request-data)
                          (select-keys [:n :digits :replacement :signed])
-                         (set/rename-keys {:digits :decimalPlaces}))]
-    (v/validate request-data
-                :n v/n-validator
-                :decimalPlaces v/decimal-range-validator
-                :replacement v/boolean
-                :signed v/boolean)
+                         (set/rename-keys {:digits :decimalPlaces}))
+        errors-map (v/validate request-data
+                               :n v/n-validator
+                               :decimalPlaces v/decimal-range-validator
+                               :replacement v/boolean
+                               :signed v/boolean)]
     
-    (request-processor
-     (if signed
-       "generateDecimalFractions"
-       "generateSignedDecimalFractions") request-data)))
+    (cond
+     (empty? errors-map)
+     (request-processor
+      (if signed
+        "generateSignedDecimalFractions"
+        "generateDecimalFractions")
+      request-data)
+     :else (make-error errors-map))))
 
 (defn generate-gaussians
   "Generates decimal fractions from a normal distribution

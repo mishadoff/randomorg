@@ -40,24 +40,24 @@
     (fact "n"
       (fact "integer"
         (g :n "1" :min 1 :max 10) => error
-        (g :n 10.2 :min 1 :max 10) => error
+        (g :n 10.2 :min 1 :max 10) => error)
       (fact "out of range"
         (g :n 0 :min 0 :max 10) => error
-        (g :n 1e5 :min 0 :max 10) => error)))
+        (g :n 1e5 :min 0 :max 10) => error))
     (fact "min"
       (fact "integer"
         (g :n 1 :min 0.1 :max 10) => error
-        (g :n 1 :min "2" :max 10) => error
+        (g :n 1 :min "2" :max 10) => error)
       (fact "out of range"
         (g :n 0 :min 1000000001 :max 1000000002) => error
-        (g :n 1 :min -1000000001 :max 1) => error)))
+        (g :n 1 :min -1000000001 :max 1) => error))
     (fact "max"
       (fact "integer"
         (g :n 1 :min 0 :max 1.2) => error
-        (g :n 1 :min 0 :max "1") => error
+        (g :n 1 :min 0 :max "1") => error)
       (fact "out of range"
         (g :n 0 :min 1 :max 1000000001) => error
-        (g :n 1 :min 0 :max -1000000001) => error)))
+        (g :n 1 :min 0 :max -1000000001) => error))
     (fact "replacement"
       (fact "boolean"
         (g :n 1 :min 0 :max 1 :replacement true) => success
@@ -71,6 +71,47 @@
       (doseq [base [1 3 5 7]]
         (fact (g :n 1 :min 0 :max 1 :base base) => error)))))
 
+(fact "generate-decimal-fractions"
+  (let [g generate-decimal-fractions] ;; just an alias
+    (fact "happy case"
+      (g :n 1 :digits 1) => success
+      (g :n 2 :digits 10) => success
+      (g :n 10 :digits 20) => success)
+    (fact "integration"
+      (fact "three uniform distribution numbers [0, 1]"
+        (g :n 3 :digits 2) => success))
+    (fact "required params"
+      (g) => error
+      (g :n 1) => error
+      (g :digits 2) => error
+      (g :digits 2 :replacement false) => error
+      (g :n 1 :replacement true) => error)
+    (fact "n"
+      (fact "integer"
+        (g :n "1" :digits 2) => error
+        (g :n 10.2 :digits 2) => error)
+      (fact "out of range"
+        (g :n 0 :digits 2) => error
+        (g :n 1e5 :digits 2) => error))
+    (fact "digits"
+      (fact "integer"
+        (g :n 1 :digits 0.1) => error
+        (g :n 1 :digits "2") => error)
+      (fact "out of range"
+        (g :n 1 :digits 0) => error
+        (g :n 1 :digits 21) => error))
+    (fact "replacement"
+      (fact "boolean"
+        (g :n 1 :digits 2 :replacement true) => success
+        (g :n 1 :digits 2 :replacement false) => success
+        (g :n 1 :digits 2 :replacement nil) => error
+        (g :n 1 :digits 2 :replacement 0) => error
+        (g :n 1 :digits 2 :replacement "") => error))))
+
 (fact "signed requests"
-  (generate-integers :n 1 :min 0 :max 1 :signed true) => signed
-  (generate-integers :n 1 :min 0 :max 1) =not=> signed)
+  (fact "generate-integers"
+    (generate-integers :n 1 :min 0 :max 1 :signed true) => signed
+    (generate-integers :n 1 :min 0 :max 1) =not=> signed)
+  (fact "generate-decimal-fractions"
+    (generate-decimal-fractions :n 1 :digits 2 :signed true) => signed
+    (generate-decimal-fractions :n 1 :digits 2) =not=> signed))

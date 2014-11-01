@@ -1,4 +1,4 @@
-# randomorg [![Build Status](https://api.travis-ci.org/mishadoff/randomorg.png)](https://travis-ci.org/mishadoff/randomorg) [![Dependencies Status](http://jarkeeper.com/mishadoff/randomorg/status.png)(http://jarkeeper.com/mishadoff/randomorg)]
+# randomorg [![Build Status](https://api.travis-ci.org/mishadoff/randomorg.png)](https://travis-ci.org/mishadoff/randomorg) [![Dependencies Status](http://jarkeeper.com/mishadoff/randomorg/status.png)](http://jarkeeper.com/mishadoff/randomorg)
 
 Random generator via atmospheric noise random.org
 

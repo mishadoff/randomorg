@@ -76,8 +76,7 @@
         (post-json)
         ((fn [response]
            (case (:status response)
-             200 (let [json (-> (:body response)
-                                (json/read-str :key-fn keyword))
+             200 (let [json (json/read-str (:body response) :key-fn keyword)
                        result (:result json)
                        data (get-in result [:random :data])
                        usage (api-usage-processor result)
@@ -86,11 +85,10 @@
                        verify (:authenticity result)]
                    (cond
                     verify (make-success verify)
-                    result (-> (make-success data :usage usage)
-                               ((fn [success]
-                                  (if signed
-                                    (assoc success :signed signed-data)
-                                    success))))
+                    result ((fn [success]
+                              (if signed
+                                (assoc success :signed signed-data)
+                                success)) (make-success data :usage usage))
                     error (make-error error)
                     :else (make-error nil)))
              
@@ -113,8 +111,9 @@
 "
   [& {:keys [n min max replacement base signed]
       :as raw-request-data}]
-  (let [request-data (-> (merge {:replacement true :base 10 :signed false} raw-request-data)
-                         (select-keys [:n :min :max :replacement :base :signed]))
+  (let [request-data (select-keys
+                      (merge {:replacement true :base 10 :signed false} raw-request-data)
+                      [:n :min :max :replacement :base :signed])
         errors-map (v/validate request-data
                                :n v/n-validator
                                :min v/range-1e9-validator
@@ -203,8 +202,9 @@
 "
   [& {:keys [n length characters replacement signed]
       :as raw-request-data}]
-  (let [request-data (-> (merge {:replacement true :signed false} raw-request-data)
-                         (select-keys [:n :length :characters :replacement :signed]))]
+  (let [request-data (select-keys
+                      (merge {:replacement true :signed false} raw-request-data)
+                      [:n :length :characters :replacement :signed])]
     (v/validate request-data
                 :n v/n-validator
                 :length v/string-length-validator
@@ -227,8 +227,9 @@
 "
   [& {:keys [n signed]
       :as raw-request-data}]
-  (let [request-data (-> (merge {:signed false} raw-request-data)
-                         (select-keys [:n :signed]))]
+  (let [request-data (select-keys
+                      (merge {:signed false} raw-request-data)
+                      [:n :signed])]
     (v/validate request-data
                 :n v/n-uuid-validator
                 :signed v/boolean)
@@ -249,8 +250,9 @@
 "
   [& {:keys [n size format signed]
       :as raw-request-data}]
-  (let [request-data (-> (merge {:format "base64" :signed false} raw-request-data)
-                         (select-keys [:n :size :format :signed]))]
+  (let [request-data (select-keys
+                      (merge {:format "base64" :signed false} raw-request-data)
+                      [:n :size :format :signed])]
     (v/validate request-data
                 :n v/n-blob-validator
                 :size v/blob-size-validator

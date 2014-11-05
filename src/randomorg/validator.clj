@@ -43,7 +43,7 @@
 (def n-validator [v/required integer [ranged [1 1e4]]])
 (def n-uuid-validator [v/required integer [ranged [1 1e3]]])
 (def range-1e9-validator [v/required integer [ranged [-1e9 1e9]]])
-(def range-1e6-validator [v/required integer [ranged [-1e6 1e6]]])
+(def range-1e6-validator [v/required v/number [ranged [-1e6 1e6]]])
 (def decimal-range-validator [v/required integer [ranged [1 20]]])
 (def string-length-validator [v/required integer [ranged [1 20]]])
 (def significant-digits-validator [v/required integer [ranged [2 20]]])

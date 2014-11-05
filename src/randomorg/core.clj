@@ -177,16 +177,21 @@
   (let [request-data (-> (merge {:signed false} raw-request-data)
                          (select-keys [:n :mean :std :digits :signed])
                          (set/rename-keys {:std :standardDeviation
-                                           :digits :significantDigits}))]
-    (v/validate request-data
-                :n v/n-validator
-                :mean v/range-1e6-validator
-                :standardDeviation v/range-1e6-validator
-                :significantDigits v/significant-digits-validator
-                :signed v/boolean)
-    (request-processor
-     (if signed "generateSignedGaussians" "generateGaussians")
-     request-data)))
+                                           :digits :significantDigits}))
+        errors-map (v/validate request-data
+                               :n v/n-validator
+                               :mean v/range-1e6-validator
+                               :standardDeviation v/range-1e6-validator
+                               :significantDigits v/significant-digits-validator
+                               :signed v/boolean)]
+    (cond
+     (empty? errors-map)
+     (request-processor
+      (if signed
+        "generateSignedGaussians"
+        "generateGaussians")
+      request-data)
+     :else (make-error errors-map))))
 
 (defn generate-strings
   "Generates random strings from specified characters

@@ -108,10 +108,71 @@
         (g :n 1 :digits 2 :replacement 0) => error
         (g :n 1 :digits 2 :replacement "") => error))))
 
+(fact "generate-gaussians"
+  (let [g generate-gaussians] ;; just an alias
+    (fact "happy case"
+      (g :n 1 :mean 0 :std 10.0 :digits 10) => success
+      (g :n 2 :mean -10 :std 10.0 :digits 10) => success
+      (g :n 10 :mean 1e6 :std 1 :digits 2) => success)
+    (fact "integration"
+      (fact "three normal distribution numbers [0, ~1]"
+        (g :n 3 :mean 0 :std 1.0 :digits 2) => success))
+    (fact "required params"
+      (g) => error
+      (g :n 1) => error
+      (g :digits 2) => error
+      (g :n 1 :digits 2) => error
+      (g :n 1 :digits 2 :mean 0.0) => error
+      (g :n 1 :digits 2 :std 1.0) => error)
+    (fact "n"
+      (fact "integer"
+        (g :n "1" :std 1.0 :mean 0 :digits 2) => error
+        (g :n 10.2 :std 1.0 :mean 0 :digits 2) => error)
+      (fact "out of range"
+        (g :n 0 :std 1.0 :mean 0 :digits 2) => error
+        (g :n 1e5 :std 1.0 :mean 0 :digits 2) => error))
+    (fact "digits"
+      (fact "integer"
+        (g :n 1 :std 1.0 :mean 0 :digits 0.1) => error
+        (g :n 1 :std 1.0 :mean 0 :digits "2") => error)
+      (fact "out of range"
+        (g :n 1 :std 1.0 :mean 0 :digits 0) => error
+        (g :n 1 :std 1.0 :mean 0 :digits 1) => error
+        (g :n 1 :std 1.0 :mean 0 :digits 2) => success
+        (g :n 1 :std 1.0 :mean 0 :digits 20) => success
+        (g :n 1 :std 1.0 :mean 0 :digits 21) => error))
+    (fact "mean"
+      (fact "number"
+        (g :n 1 :std 1.0 :mean 0 :digits 2) => success
+        (g :n 1 :std 1.0 :mean 0.5 :digits 2) => success
+        (g :n 1 :std 1.0 :mean "1.0" :digits 2) => error)
+      (fact "out of range"
+        (g :n 1 :std 1.0 :mean 0 :digits 2) => success
+        (g :n 1 :std 1.0 :mean 1e6 :digits 2) => success
+        (g :n 1 :std 1.0 :mean -1e6 :digits 2) => success
+        (g :n 1 :std 1.0 :mean 1e7 :digits 2) => error
+        (g :n 1 :std 1.0 :mean -1e7 :digits 2) => error))
+    (fact "std"
+      (fact "number"
+        (g :n 1 :std 1 :mean 0.0 :digits 2) => success
+        (g :n 1 :std 1.5 :mean 0.0 :digits 2) => success
+        (g :n 1 :std "1.0" :mean 0.0 :digits 2) => error)
+      (fact "out of range"
+        (g :n 1 :std 1.0 :mean 0 :digits 2) => success
+        (g :n 1 :std 1e6 :mean 0 :digits 2) => success
+        (g :n 1 :std -1e6 :mean 0 :digits 2) => success
+        (g :n 1 :std 1e7 :mean 0 :digits 2) => error
+        (g :n 1 :std -1e7 :mean 0 :digits 2) => error))
+        ))
+
 (fact "signed requests"
   (fact "generate-integers"
     (generate-integers :n 1 :min 0 :max 1 :signed true) => signed
     (generate-integers :n 1 :min 0 :max 1) =not=> signed)
   (fact "generate-decimal-fractions"
     (generate-decimal-fractions :n 1 :digits 2 :signed true) => signed
-    (generate-decimal-fractions :n 1 :digits 2) =not=> signed))
+    (generate-decimal-fractions :n 1 :digits 2) =not=> signed)
+  (fact "generate-gaussians"
+    (generate-gaussians :n 1 :std 1.0 :mean 0.0 :digits 2 :signed true) => signed
+    (generate-gaussians :n 1 :std 1.0 :mean 0.0 :digits 2) =not=> signed)
+  )

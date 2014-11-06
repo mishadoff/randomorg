@@ -209,17 +209,21 @@
       :as raw-request-data}]
   (let [request-data (select-keys
                       (merge {:replacement true :signed false} raw-request-data)
-                      [:n :length :characters :replacement :signed])]
-    (v/validate request-data
-                :n v/n-validator
-                :length v/string-length-validator
-                :characters v/characters-validator
-                :replacement v/boolean
-                :signed v/boolean)
-    
-    (request-processor
-     (if signed "generateSignedStrings" "generateStrings")
-     request-data)))
+                      [:n :length :characters :replacement :signed])
+        errors-map (v/validate request-data
+                               :n v/n-validator
+                               :length v/string-length-validator
+                               :characters v/characters-validator
+                               :replacement v/boolean
+                               :signed v/boolean)]
+    (cond
+     (empty? errors-map)
+     (request-processor
+      (if signed
+        "generateSignedStrings"
+        "generateStrings")
+      request-data)
+     :else (make-error errors-map))))
 
 (defn generate-uuids
   "Generates random uuids

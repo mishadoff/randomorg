@@ -16,6 +16,10 @@
   (and (= (:status result) :success)
        (not (empty? (:data result)))))
 
+(defn usage [result]
+  (and (= (:status result) :success)
+       (not (empty? (:usage result)))))
+
 (defn signed [result]
   (and (not (empty? (get-in result [:signed :signature])))
        (not (empty? (get-in result [:signed :random])))))
@@ -163,7 +167,49 @@
         (g :n 1 :std -1e6 :mean 0 :digits 2) => success
         (g :n 1 :std 1e7 :mean 0 :digits 2) => error
         (g :n 1 :std -1e7 :mean 0 :digits 2) => error))
-        ))
+    ))
+
+(fact "generate-strings"
+  (let [g generate-strings] ;; just an alias
+    (fact "happy case"
+      (g :n 1 :length 1 :characters lowercase) => success
+      (g :n 2 :length 20 :characters lowercase) => success
+      (g :n 10 :length 1 :characters digits :replacement false) => success)
+    (fact "integration"
+      (fact "random password"
+        (g :n 1 :length 12 :characters (str lowercase uppercase digits)) => success))
+    (fact "required params"
+      (g) => error
+      (g :n 1) => error
+      (g :n 2 :length 1) => error
+      (g :n 1 :characters lowercase) => error
+      (g :n 1 :characters digits :replacement false) => error
+      (g :length 10 :characters lowercase) => error)
+    (fact "n"
+      (fact "integer"
+        (g :n "1" :length 1 :characters lowercase) => error
+        (g :n 10.2 :length 1 :characters lowercase) => error)
+      (fact "out of range"
+        (g :n 0 :length 1 :characters lowercase) => error
+        (g :n 1e5 :length 1 :characters lowercase) => error))
+    (fact "length"
+      (fact "integer"
+        (g :n 1 :length "1" :characters lowercase) => error
+        (g :n 1 :length 1.1 :characters lowercase) => error)
+      (fact "out of range"
+        (g :n 1 :length 0 :characters lowercase) => error
+        (g :n 1 :length 1 :characters lowercase) => success
+        (g :n 1 :length 20 :characters lowercase) => success
+        (g :n 1 :length 21 :characters lowercase) => error))
+    (fact "characters"
+      (fact "string"
+        (g :n 1 :length 1 :characters 1) => error
+        (g :n 1 :length 1 :characters nil) => error)
+      (fact "out of range"
+        (g :n 1 :length 1 :characters "") => error
+        (g :n 1 :length 1 :characters (apply str (repeat 40 "1"))) => success
+        (g :n 1 :length 1 :characters (apply str (repeat 80 "1"))) => success
+        (g :n 1 :length 1 :characters (apply str (repeat 81 "1"))) => error))))
 
 (fact "signed requests"
   (fact "generate-integers"
@@ -175,4 +221,12 @@
   (fact "generate-gaussians"
     (generate-gaussians :n 1 :std 1.0 :mean 0.0 :digits 2 :signed true) => signed
     (generate-gaussians :n 1 :std 1.0 :mean 0.0 :digits 2) =not=> signed)
+  (fact "generate-strings"
+    (generate-strings :n 1 :length 10 :characters lowercase :signed true) => signed
+    (generate-strings :n 1 :length 10 :characters lowercase) =not=> signed)
   )
+
+(fact "get-usage"
+  (let [usage-data (get-usage)]
+    (println usage-data)
+    usage-data => usage))

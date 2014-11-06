@@ -299,4 +299,4 @@
         good-data signed
         fake-data (update-in signed [:signature] clojure.string/reverse)]
     (:data (verify-signature good-data)) => true
-    (:status (verify-signature fake-data)) => error))
+    (:status (verify-signature fake-data)) => :error))

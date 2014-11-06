@@ -238,13 +238,18 @@
       :as raw-request-data}]
   (let [request-data (select-keys
                       (merge {:signed false} raw-request-data)
-                      [:n :signed])]
-    (v/validate request-data
-                :n v/n-uuid-validator
-                :signed v/boolean)
-    
-    (request-processor
-     (if signed "generateSignedUUIDs" "generateUUIDs") request-data)))
+                      [:n :signed])
+        errors-map (v/validate request-data
+                               :n v/n-uuid-validator
+                               :signed v/boolean)]
+    (cond
+     (empty? errors-map)
+     (request-processor
+      (if signed
+        "generateSignedUUIDs"
+        "generateUUIDs")
+      request-data)
+     :else (make-error errors-map))))
 
 (defn generate-blobs
   "Generates random blobs
@@ -261,16 +266,20 @@
       :as raw-request-data}]
   (let [request-data (select-keys
                       (merge {:format "base64" :signed false} raw-request-data)
-                      [:n :size :format :signed])]
-    (v/validate request-data
-                :n v/n-blob-validator
-                :size v/blob-size-validator
-                :format v/blob-format-validator
-                :signed v/boolean)
-    
-    (request-processor
-     (if signed "generateSignedBlobs" "generateBlobs")  request-data)))
-
+                      [:n :size :format :signed])
+        errors-map (v/validate request-data
+                               :n v/n-blob-validator
+                               :size v/blob-size-validator
+                               :format v/blob-format-validator
+                               :signed v/boolean)]
+    (cond
+     (empty? errors-map)
+     (request-processor
+      (if signed
+        "generateSignedBlobs"
+        "generateBlobs")
+      request-data)
+     :else (make-error errors-map))))
 
 (defn get-usage
   "Get API usage limits"
@@ -281,7 +290,13 @@
 (defn verify-signature
   "Check that random data realy comes from RANDOM.ORG"
   [{:keys [random signature] :as signed}]
-  (v/validate signed
-              :random v/required-random
-              :signature v/required-signature)
-  (request-processor "verifySignature" (select-keys signed [:random :signature]) :api-key false))
+  (let [errors-map (v/validate signed
+                               :random v/required-random
+                               :signature v/required-signature)]
+    (cond
+     (empty? errors-map)
+     (request-processor
+      "verifySignature"
+      (select-keys signed [:random :signature]) :api-key false)
+     :else (make-error errors-map))
+    ))

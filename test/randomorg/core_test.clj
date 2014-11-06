@@ -211,6 +211,62 @@
         (g :n 1 :length 1 :characters (apply str (repeat 80 "1"))) => success
         (g :n 1 :length 1 :characters (apply str (repeat 81 "1"))) => error))))
 
+(fact "generate-uuids"
+  (let [g generate-uuids] ;; just an alias
+    (fact "happy case"
+      (g :n 1) => success)
+    (fact "integration"
+      (fact "three uuids password"
+        (g :n 3) => success))
+    (fact "required params"
+      (g) => error)
+    (fact "n"
+      (fact "integer"
+        (g :n "1") => error
+        (g :n 10.2) => error)
+      (fact "out of range"
+        (g :n 0) => error
+        (g :n 1e4) => error))))
+
+(fact "generate-blobs"
+  (let [g generate-blobs] ;; just an alias
+    (fact "happy case"
+      (g :n 1 :size 8) => success)
+    (fact "integration"
+      (fact "garbage"
+        (g :n 1 :size 128 :format "hex") => success))
+    (fact "required params"
+      (g) => error
+      (g :n 1) => error
+      (g :size 8) => error)
+    (fact "n"
+      (fact "integer"
+        (g :n "1" :size 8) => error
+        (g :n 10.2 :size 8) => error)
+      (fact "out of range"
+        (g :n 0 :size 8) => error
+        (g :n 101 :size 8) => error))
+    (fact "size"
+      (fact "integer"
+        (g :n 1 :size "8") => error
+        (g :n 1 :size 2.3) => error)
+      (fact "divisible by 8"
+        (g :n 1 :size 0) => error
+        (g :n 1 :size 1) => error
+        (g :n 1 :size 2) => error
+        (g :n 1 :size 8) => success
+        (g :n 1 :size 9) => error
+        (g :n 1 :size 16) => success)
+      (fact "out of range"
+        (g :n 1 :size 0) => error
+        (g :n 1 :size 1048584) => error))
+    (fact "format"
+      (g :n 1 :size 8 :format "base64") => success
+      (g :n 1 :size 8 :format "hex") => success
+      (g :n 1 :size 8 :format nil) => error
+      (g :n 1 :size 8 :format "empty") => error)
+    ))
+
 (fact "signed requests"
   (fact "generate-integers"
     (generate-integers :n 1 :min 0 :max 1 :signed true) => signed
@@ -224,9 +280,23 @@
   (fact "generate-strings"
     (generate-strings :n 1 :length 10 :characters lowercase :signed true) => signed
     (generate-strings :n 1 :length 10 :characters lowercase) =not=> signed)
+  (fact "generate-uuids"
+    (generate-uuids :n 1 :signed true) => signed
+    (generate-uuids :n 1 :signed false) =not=> signed)
+  (fact "generate-blobs"
+    (generate-blobs :n 1 :size 8 :format "hex" :signed true) => signed
+    (generate-blobs :n 1 :size 8 :format "hex" :signed false) =not=> signed)
   )
 
 (fact "get-usage"
   (let [usage-data (get-usage)]
     (println usage-data)
     usage-data => usage))
+
+(fact "verify-signature"
+  (verify-signature {}) => error
+  (let [signed (:signed (generate-uuids :n 1 :signed true))
+        good-data signed
+        fake-data (update-in signed [:signature] clojure.string/reverse)]
+    (:data (verify-signature good-data)) => true
+    (:status (verify-signature fake-data)) => error))
